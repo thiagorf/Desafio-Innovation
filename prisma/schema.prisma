@@ -24,14 +24,23 @@ model Product {
 	updated_at DateTime @updatedAt()
 	deleted_at DateTime?
 
-	category Category[]
+	category CategoryOnProduct[]
 }
 
 model Category {
-	id String @id @default(uuid())
-	name String
+	name String @unique
 
-	product Product[]
+	product CategoryOnProduct[]
+}
+
+model CategoryOnProduct {
+	product_id String
+	product Product @relation(fields: [ product_id], references: [id])
+
+	category_id String
+	category Category @relation(fields: [category_id], references: [name])
+
+	@@id([product_id, category_id])
 }
 
 model Municipality {
