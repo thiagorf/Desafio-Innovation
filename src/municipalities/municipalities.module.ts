@@ -4,6 +4,6 @@ import { MunicipalitiesController } from './municipalities.controller';
 
 @Module({
   providers: [MunicipalitiesService],
-  controllers: [MunicipalitiesController]
+  controllers: [MunicipalitiesController],
 })
 export class MunicipalitiesModule {}
