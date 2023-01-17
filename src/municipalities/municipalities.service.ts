@@ -8,9 +8,9 @@ export class MunicipalitiesService {
   constructor(private prisma: PrismaService) {}
 
   async findMunicipalities(municipality_id: number) {
-    const { data } = await axios.get(process.env.IBGE_URL + municipality_id);
+    const { data } = await axios.get(`${process.env.IBGE}/${municipality_id}`);
 
-    const { id, name } = data;
+    const { id, nome } = data;
 
     const municipalityExists = await this.prisma.municipality.findUnique({
       where: {
@@ -27,7 +27,7 @@ export class MunicipalitiesService {
     const municipality = await this.prisma.municipality.create({
       data: {
         id,
-        name,
+        name: nome,
       },
     });
 

@@ -20,6 +20,7 @@ export class ProductsService {
 
   private createCategoryWhere(categories: string[]) {
     const formatCategory = categories.map((ct) => {
+      console.log(ct);
       return {
         connectOrCreate: {
           where: {
@@ -32,6 +33,8 @@ export class ProductsService {
       };
     });
 
+    console.log(formatCategory);
+
     const category = Object.assign({}, ...formatCategory);
 
     return category;
@@ -40,14 +43,23 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     const { category, ...productData } = createProductDto;
 
-    const connectOrCreateData = this.createCategoryWhere(category);
-
-    console.log(connectOrCreateData);
+    const categoriesWhere = category.map((ct) => {
+      return {
+        where: {
+          name: ct,
+        },
+        create: {
+          name: ct,
+        },
+      };
+    });
 
     const product = await this.prisma.product.create({
       data: {
         ...productData,
-        category: connectOrCreateData,
+        category: {
+          connectOrCreate: [...categoriesWhere],
+        },
       },
       select: this.productSelect,
     });
@@ -57,6 +69,9 @@ export class ProductsService {
 
   async findAll() {
     return await this.prisma.product.findMany({
+      where: {
+        deleted_at: null,
+      },
       select: this.productSelect,
     });
   }
@@ -78,6 +93,7 @@ export class ProductsService {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { deleted_at, ...formattedProduct } = product;
 
     return formattedProduct;
@@ -87,9 +103,6 @@ export class ProductsService {
     const product = await this.prisma.product.findUnique({
       where: {
         id,
-      },
-      include: {
-        category: true,
       },
     });
 
@@ -102,31 +115,36 @@ export class ProductsService {
 
     const { category, ...productData } = updateProductDto;
 
-    const connectOrCreateData = this.createCategoryWhere(category);
+    //const connectOrCreateData = this.createCategoryWhere(category);
 
-    const [_, updatedCategory] = await this.prisma.$transaction([
-      this.prisma.product.update({
-        where: {
-          id,
+    /*
+    const categories = await this.prisma.category.findMany({
+      where: {
+        name: {
+          in: category,
         },
-        data: {
-          category: {
-            disconnect: [...product.category],
-          },
-        },
-      }),
-      this.prisma.product.update({
-        where: {
-          id,
-        },
-        data: {
-          ...productData,
-          category: connectOrCreateData,
-        },
-      }),
-    ]);
+      },
+    });*/
 
-    const { deleted_at, ...updatedProduct } = updatedCategory;
+    const mapCategory = category.map((ct) => ({ name: ct }));
+
+    await this.prisma.category.createMany({
+      skipDuplicates: true,
+      data: [...mapCategory],
+    });
+
+    const updatedProduct = await this.prisma.product.update({
+      where: {
+        id,
+      },
+      data: {
+        ...productData,
+        category: {
+          set: [...mapCategory],
+        },
+      },
+      select: this.productSelect,
+    });
 
     return updatedProduct;
   }

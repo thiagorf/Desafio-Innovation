@@ -8,7 +8,7 @@ import { MUNICIPALITY_EXCEPTION } from './municipalities.constraints';
 export class MunicipalitiesController {
   constructor(private municipalitiesService: MunicipalitiesService) {}
 
-  @Post(':id')
+  @Post(':municipality_id')
   @ApiResponse({
     status: HttpStatus.OK,
   })
@@ -16,7 +16,9 @@ export class MunicipalitiesController {
     status: HttpStatus.BAD_REQUEST,
     description: MUNICIPALITY_EXCEPTION.INVALID,
   })
-  async findMunicipalities(@Param('id') id: string) {
-    return await this.municipalitiesService.findMunicipalities(+id);
+  async findMunicipalities(@Param('municipality_id') municipality_id: string) {
+    return await this.municipalitiesService.findMunicipalities(
+      +municipality_id,
+    );
   }
 }
